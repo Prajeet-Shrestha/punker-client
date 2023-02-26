@@ -102,8 +102,8 @@ export default class BattleScene extends Scene {
     this.test2 = {
       c_2: new Character(
         'c_2',
-        Math.floor(Math.random() * 700) + 550,
-        Math.floor(Math.random() * 400) + 200,
+        Math.floor(Math.random() * this.sys.canvas.width - 200) + 100,
+        Math.floor(Math.random() * this.sys.canvas.height * 0.7) + this.sys.canvas.height * 0.23,
         this.player_keys,
         {
           maxX: this.sys.canvas.width,
@@ -115,8 +115,8 @@ export default class BattleScene extends Scene {
       ),
       c_3: new Character(
         'c_3',
-        Math.floor(Math.random() * 600) + 550,
-        Math.floor(Math.random() * 400) + 200,
+        Math.floor(Math.random() * this.sys.canvas.width - 200) + 100,
+        Math.floor(Math.random() * this.sys.canvas.height * 0.7) + this.sys.canvas.height * 0.23,
         this.player_keys,
         {
           maxX: this.sys.canvas.width,

@@ -60,7 +60,8 @@ export class Character {
     this.gameObject.setAngularDrag(100);
     this.gameObject.setMaxVelocity(200);
     // this.gameObject.setTint(0xff00ff);
-    this.health = new HealthBar(scene, this.gameObject.x, this.gameObject.y);
+
+    this.health = new HealthBar(scene, this.gameObject.x, this.gameObject.y, this);
     this.dimension.height = this.gameObject.displayHeight;
     this.dimension.width = this.gameObject.displayWidth - 500;
     this.gameObject.body.setCollideWorldBounds(true);
@@ -119,8 +120,10 @@ export class Character {
       repeat: 1,
     });
     this.bullets = new Bullets(scene);
-
-    // this.gameObject.play('MOVE_RIGHT');
+    let self = this;
+    scene.events.on('postupdate', function () {
+      self.health.draw(true);
+    });
   }
   boundriesValidator() {
     if (this.gameObject.y + this.gameObject.displayHeight >= this.boundries.maxY) {
@@ -238,9 +241,9 @@ export class Character {
       } else {
         this.gameObject.setVelocity(0, 0);
       }
-      this.health.updatePos(this.gameObject.x, this.gameObject.y);
       this.setAnimation(movement);
       this.boundriesValidator();
+      this.health.draw(true);
     }
   }
 }
@@ -252,17 +255,20 @@ class HealthBar {
   value;
   length;
   total;
-  constructor(scene, x, y) {
+  isVisible = true;
+  constructor(scene, x, y, public character: Character) {
+    let self = this;
     this.bar = new Phaser.GameObjects.Graphics(scene);
-
-    this.x = x + 100;
-    this.y = y + 20;
+    this.x = character.gameObject.x + 100;
+    this.y = character.gameObject.y + 20;
     this.value = 100;
     this.total = this.value;
     this.length = 76;
-
-    this.draw();
-
+    this.draw(true);
+    setTimeout(() => {
+      self.isVisible = false;
+      this.draw(false);
+    }, 1000);
     scene.add.existing(this.bar);
   }
 
@@ -273,29 +279,33 @@ class HealthBar {
       this.value = 0;
     }
 
-    this.draw();
-
+    this.draw(true);
+    setTimeout(() => {
+      this.draw(false);
+    }, 2000);
     return this.value === 0;
   }
-  updatePos(x, y) {
-    this.x = x + 100;
-    this.y = y;
-    this.draw();
-  }
-  draw() {
-    this.bar.clear();
-    //  BG
-    this.bar.fillStyle(0x000000);
-    this.bar.fillRect(this.x, this.y, this.length + 4, 10);
-    //  Health
-    this.bar.fillStyle(0xffffff);
-    this.bar.fillRect(this.x + 2, this.y + 2, this.length, 7);
-    if (this.value < 30) {
-      this.bar.fillStyle(0xff0000);
+
+  draw(show) {
+    if (this.isVisible || show) {
+      this.x = this.character.gameObject.x + 100;
+      this.y = this.character.gameObject.y;
+      this.bar.clear();
+      //  BG
+      this.bar.fillStyle(0x000000);
+      this.bar.fillRect(this.x, this.y, this.length + 4, 10);
+      //  Health
+      this.bar.fillStyle(0xffffff);
+      this.bar.fillRect(this.x + 2, this.y + 2, this.length, 7);
+      if (this.value < 30) {
+        this.bar.fillStyle(0xff0000);
+      } else {
+        this.bar.fillStyle(0x00ff00);
+      }
+      var d = this.value / this.total;
+      this.bar.fillRect(this.x + 2, this.y + 2, d * this.length, 7);
     } else {
-      this.bar.fillStyle(0x00ff00);
+      this.bar.clear();
     }
-    var d = this.value / this.total;
-    this.bar.fillRect(this.x + 2, this.y + 2, d * this.length, 7);
   }
 }
