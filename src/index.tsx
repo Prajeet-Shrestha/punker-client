@@ -3,10 +3,14 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+import socketService from './socket/socketService';
+async function connect() {
+  const res = await socketService.connect('http://localhost:8085/').catch((err) => {
+    console.log(err);
+  });
+}
+connect();
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <React.StrictMode>
     <App />
