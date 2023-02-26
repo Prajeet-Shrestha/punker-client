@@ -1,6 +1,7 @@
 import Phaser, { Game, Scene, Scenes } from 'phaser';
 import socketService from '../socket/socketService';
 import { Character } from './gameObject/Character';
+import { Infantry } from './gameObject/enemies/Infantry';
 
 export default class BattleScene extends Scene {
   constructor() {
@@ -26,11 +27,16 @@ export default class BattleScene extends Scene {
     this.load.spritesheet('player_move', './player_move.png', { frameWidth: 40, frameHeight: 26 });
     this.load.spritesheet('player_idle', './static idle.png', { frameWidth: 40, frameHeight: 26 });
     this.load.spritesheet('player_wake', './wake.png', { frameWidth: 40, frameHeight: 26 });
-    this.load.spritesheet('player_shoot', './shoot with FX.png', { frameWidth: 117, frameHeight: 26 });
-    this.load.spritesheet('player_idle_wake', './static wake.png', { frameWidth: 117, frameHeight: 26 });
+    this.load.spritesheet('player_shoot', './shoot with FX.png', { frameWidth: 40, frameHeight: 26 });
+    this.load.spritesheet('player_idle_wake', './static wake.png', { frameWidth: 40, frameHeight: 26 });
     this.load.spritesheet('player_damage', './damage.png', { frameWidth: 40, frameHeight: 26 });
     this.load.spritesheet('player_dead', './dead.png', { frameWidth: 40, frameHeight: 26 });
     this.load.spritesheet('player_dead_idle', './dead_idle.png', { frameWidth: 40, frameHeight: 26 });
+    this.load.spritesheet('infantry_move', './Red/Run.png', { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet('infantry_dead', './Red/Dead.png', { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet('infantry_idle', './Red/Idle.png', { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet('infantry_damage', './Red/damage.png', { frameWidth: 48, frameHeight: 48 });
+    this.load.spritesheet('infantry_dead_idle', './Red/Dead_idle.png', { frameWidth: 48, frameHeight: 48 });
     this.load.image('bullet', './bullet.png');
   }
   setBackground(self: Scene) {
@@ -41,8 +47,61 @@ export default class BattleScene extends Scene {
   playerList = [];
   playerObjectList = [];
   tesst: Character;
+  infantyAnim(scene, spriteSheet) {
+    scene.anims.create({
+      key: 'INFANTRY_MOVE_RIGHT',
+      frames: spriteSheet.move,
+      frameRate: 12,
+      repeat: -1,
+    });
+    scene.anims.create({
+      key: 'INFANTRY_MOVE_LEFT',
+      frames: spriteSheet.move,
+      frameRate: 12,
+      repeat: -1,
+    });
+    scene.anims.create({
+      key: 'INFANTRY_IDLE',
+      frames: spriteSheet.idle,
+      frameRate: 12,
+      repeat: -1,
+    });
+    scene.anims.create({
+      key: 'INFANTRY_SHOOT',
+      frames: spriteSheet.shoot,
+      frameRate: 22,
+      repeat: -1,
+    });
+
+    scene.anims.create({
+      key: 'INFANTRY_DAMAGE',
+      frames: spriteSheet.damage,
+      frameRate: 12,
+      repeat: 1,
+    });
+    scene.anims.create({
+      key: 'INFANTRY_IDLE_DEAD',
+      frames: spriteSheet.dead_idle,
+      frameRate: 1,
+      repeat: 1,
+    });
+    scene.anims.create({
+      key: 'INFANTRY_DEAD',
+      frames: spriteSheet.dead,
+      frameRate: 12,
+      repeat: 1,
+    });
+  }
   create() {
     let self = this;
+    this.infantyAnim(this, {
+      move: 'infantry_move',
+      idle: 'infantry_idle',
+      shoot: '',
+      damage: 'infantry_damage',
+      dead: 'infantry_dead',
+      dead_idle: 'infantry_dead_idle',
+    });
     this.players = this.add.group();
     this.physics.world.setBounds(
       0,
@@ -85,26 +144,59 @@ export default class BattleScene extends Scene {
     this.rightKeyPressed = false;
     this.upKeyPressed = false;
 
-    this.tesst = new Character(
-      'c_1',
-      500,
-      500,
-      this.player_keys,
-      {
-        maxX: this.sys.canvas.width,
-        minX: 0,
-        maxY: this.sys.canvas.height,
-        minY: this.sys.canvas.height * 0.23,
-      },
-      this
-    );
+    // this.tesst = new Character(
+    //   'c_1',
+    //   500,
+    //   500,
+    //   this.player_keys,
+    //   {
+    //     maxX: this.sys.canvas.width,
+    //     minX: 0,
+    //     maxY: this.sys.canvas.height,
+    //     minY: this.sys.canvas.height * 0.23,
+    //   },
+    //   this
+    // );
 
-    this.test2 = {
-      c_2: new Character(
-        'c_2',
-        Math.floor(Math.random() * this.sys.canvas.width - 200) + 100,
-        Math.floor(Math.random() * this.sys.canvas.height * 0.7) + this.sys.canvas.height * 0.23,
+    this.otherPlayer = {
+      c_1: new Character(
+        'c_1',
+        200,
+        300,
         this.player_keys,
+        {
+          maxX: this.sys.canvas.width,
+          minX: 0,
+          maxY: this.sys.canvas.height,
+          minY: this.sys.canvas.height * 0.23,
+        },
+        this
+      ),
+      c2_1: new Character(
+        'c2_1',
+        200,
+        500,
+        this.player_keys,
+        {
+          maxX: this.sys.canvas.width,
+          minX: 0,
+          maxY: this.sys.canvas.height,
+          minY: this.sys.canvas.height * 0.23,
+        },
+        this
+      ),
+      c_2: new Infantry(
+        'c_2',
+        750,
+        700,
+        {
+          move: 'infantry_move',
+          idle: 'infantry_idle',
+          shoot: '',
+          damage: 'infantry_damage',
+          dead: 'infantry_dead',
+          dead_idle: 'infantry_dead_idle',
+        },
         {
           maxX: this.sys.canvas.width,
           minX: 0,
@@ -113,11 +205,58 @@ export default class BattleScene extends Scene {
         },
         this
       ),
-      c_3: new Character(
+      c_3: new Infantry(
         'c_3',
-        Math.floor(Math.random() * this.sys.canvas.width - 200) + 100,
-        Math.floor(Math.random() * this.sys.canvas.height * 0.7) + this.sys.canvas.height * 0.23,
-        this.player_keys,
+        600,
+        500,
+        {
+          move: 'infantry_move',
+          idle: 'infantry_idle',
+          shoot: '',
+          damage: 'infantry_damage',
+          dead: 'infantry_dead',
+          dead_idle: 'infantry_dead_idle',
+        },
+        {
+          maxX: this.sys.canvas.width,
+          minX: 0,
+          maxY: this.sys.canvas.height,
+          minY: this.sys.canvas.height - 700,
+        },
+        this
+      ),
+      i_1: new Infantry(
+        `i_1`,
+        600,
+        200,
+        {
+          move: 'infantry_move',
+          idle: 'infantry_idle',
+          shoot: '',
+          damage: 'infantry_damage',
+          dead: 'infantry_dead',
+          dead_idle: 'infantry_dead_idle',
+        },
+        {
+          maxX: this.sys.canvas.width,
+          minX: 0,
+          maxY: this.sys.canvas.height,
+          minY: this.sys.canvas.height - 700,
+        },
+        this
+      ),
+      i_11: new Infantry(
+        `i_11`,
+        570,
+        320,
+        {
+          move: 'infantry_move',
+          idle: 'infantry_idle',
+          shoot: '',
+          damage: 'infantry_damage',
+          dead: 'infantry_dead',
+          dead_idle: 'infantry_dead_idle',
+        },
         {
           maxX: this.sys.canvas.width,
           minX: 0,
@@ -127,12 +266,32 @@ export default class BattleScene extends Scene {
         this
       ),
     };
-    Object.keys(this.test2).map((res) => {
-      this.playerObjectList.push(this.test2[res].gameObject);
+    // new Infantry(
+    //   `i_1`,
+    //   Math.floor(Math.random() * this.sys.canvas.width - 200) + 100,
+    //   Math.floor(Math.random() * this.sys.canvas.height * 0.7) + this.sys.canvas.height * 0.23,
+    //   {
+    //     move: 'infantry_move',
+    //     idle: 'infantry_idle',
+    //     shoot: '',
+    //     damage: 'infantry_damage',
+    //     dead: 'infantry_dead',
+    //     dead_idle: 'infantry_dead_idle',
+    //   },
+    //   {
+    //     maxX: this.sys.canvas.width,
+    //     minX: 0,
+    //     maxY: this.sys.canvas.height,
+    //     minY: this.sys.canvas.height - 700,
+    //   },
+    //   this
+    // ).shoot();
+    Object.keys(this.otherPlayer).map((res) => {
+      this.playerObjectList.push(this.otherPlayer[res].gameObject);
     });
-    this.physics.add.collider(this.tesst.gameObject, this.playerObjectList);
+    this.physics.add.collider(this.otherPlayer.c_1.gameObject, this.playerObjectList);
   }
-  test2;
+  otherPlayer;
   leftKeyPressed;
   rightKeyPressed;
   upKeyPressed;
@@ -162,36 +321,28 @@ export default class BattleScene extends Scene {
     };
 
     if (this.cursors.left.isDown) {
-      // this.tesst.setVelocityX(-speed);
       movement.left = true;
     }
     if (this.cursors.left.isUp) {
-      // this.tesst.setVelocityX(0);
       movement.left = false;
     }
     if (this.cursors.right.isDown) {
       movement.right = true;
-      // this.tesst.setVelocityX(speed);
     }
     if (this.cursors.right.isUp) {
-      // this.tesst.setVelocityX(0);
       movement.right = false;
     }
     if (this.cursors.up.isDown) {
-      // this.tesst.setVelocityY(-speed);
       movement.up = true;
     }
     if (this.cursors.up.isUp) {
       movement.up = false;
-      // this.tesst.setVelocityY(0);
     }
     if (this.cursors.down.isDown) {
-      // this.tesst.setVelocityY(speed);
       movement.down = true;
     }
     if (this.cursors.down.isUp) {
       movement.down = false;
-      // this.tesst.setVelocityY(0);
     }
     if (this.cursors.space.isDown) {
       movement.space = true;
@@ -199,6 +350,7 @@ export default class BattleScene extends Scene {
     if (this.cursors.space.isUp) {
       movement.space = false;
     }
-    this.tesst.move(movement);
+    this.otherPlayer.c_1.move(movement);
+    // console.log(this);
   }
 }

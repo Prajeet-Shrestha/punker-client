@@ -7,24 +7,22 @@ class SocketService {
 
   public connect(url: string): Promise<Socket<DefaultEventsMap, DefaultEventsMap>> {
     return new Promise((rs, rj) => {
-      var connectionOptions = {
-        timeout: 10000,
-        transports: ['websocket', 'polling'],
-      };
-      this.socket = io(url, connectionOptions);
-      if (!this.socket) return rj();
+      //   var connectionOptions = {
+      //     timeout: 4000,
+      //     transports: ['websocket', 'polling'],
+      //   };
+      //   this.socket = io(url, connectionOptions);
+      //   if (!this.socket) return rj();
+      //   const game = new PhaserGame().start();
+      //   this.socket.on('connect', () => {
+      //     console.log('connected!');
+      //     rs(this.socket as Socket);
+      //   });
+      //   this.socket.on('connect_error', (err: any) => {
+      //     console.log('Connection error: ', err);
+      //     rj(err);
+      //   });
       const game = new PhaserGame().start();
-
-      this.socket.on('connect', () => {
-        console.log('connected!');
-
-        rs(this.socket as Socket);
-      });
-
-      this.socket.on('connect_error', (err: any) => {
-        console.log('Connection error: ', err);
-        rj(err);
-      });
     });
   }
 

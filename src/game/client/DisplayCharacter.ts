@@ -1,5 +1,5 @@
 import BattleScene from '../Battle.scene';
-import { Bullets } from './Bullets';
+import { Bullets } from '../gameObject/Bullets';
 interface keys {
   up: boolean;
   down: boolean;
@@ -7,7 +7,7 @@ interface keys {
   right: boolean;
   space: boolean;
 }
-export class Character {
+export class DisplayCharacter {
   gameObject: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   bullets: Bullets;
   speed: number = 200;
@@ -17,14 +17,6 @@ export class Character {
   };
   state: 'IDLE' | 'WAKE' | 'DEAD' = 'IDLE';
   direction: 'RIGHT' | 'LEFT' = 'RIGHT';
-  getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
 
   health: HealthBar;
   constructor(
@@ -41,12 +33,6 @@ export class Character {
       dead: string;
       dead_idle: string;
     },
-    public boundries: {
-      maxX: number;
-      maxY: number;
-      minY: number;
-      minX: number;
-    },
     public scene: BattleScene
   ) {
     this.gameObject = this.scene.physics.add
@@ -54,12 +40,7 @@ export class Character {
       .setOrigin(0, 0)
       .setScale(6)
       .setDepth(2);
-    this.gameObject.setDrag(100);
-    this.gameObject.setBodySize(10, 20);
     this.gameObject.setData({ id: id });
-    this.gameObject.setAngularDrag(100);
-    this.gameObject.setMaxVelocity(200);
-    // this.gameObject.setTint(0xff00ff);
     this.health = new HealthBar(scene, this.gameObject.x, this.gameObject.y, this);
     this.dimension.height = this.gameObject.displayHeight;
     this.dimension.width = this.gameObject.displayWidth - 500;
@@ -124,24 +105,7 @@ export class Character {
       self.health.draw(true);
     });
   }
-  boundriesValidator() {
-    if (this.gameObject.y + this.gameObject.displayHeight >= this.boundries.maxY) {
-      this.gameObject.setY(this.boundries.maxY - (this.gameObject.displayHeight + 10));
-      this.gameObject.setVelocityY(0);
-    }
-    if (this.gameObject.y <= this.boundries.minY) {
-      this.gameObject.setY(this.boundries.minY + 10);
-      this.gameObject.setVelocityY(0);
-    }
-    if (this.gameObject.x + this.dimension.width >= this.boundries.maxX) {
-      this.gameObject.setX(this.boundries.maxX - (this.dimension.width + 10));
-      this.gameObject.setVelocityX(0);
-    }
-    if (this.gameObject.x <= this.boundries.minX) {
-      this.gameObject.setX(this.boundries.minX + 2);
-      this.gameObject.setVelocityX(0);
-    }
-  }
+
   isWakingUp: boolean = false;
   setDead() {
     this.state = 'DEAD';
@@ -163,6 +127,7 @@ export class Character {
   }
   damageTaken() {
     if (this.gameObject.anims.getName() != 'DAMAGE' && this.state != 'DEAD') {
+      console.log('damage1');
       this.gameObject.play('DAMAGE');
       this.health.decrease(10);
       if (this.health.value <= 0) {
@@ -206,13 +171,13 @@ export class Character {
         }
       } else {
         if (space) {
-          if (this.gameObject.anims.getName() != 'SHOOT') this.gameObject.play('SHOOT');
-          setTimeout(() => {
-            if (this.direction == 'RIGHT')
-              this.bullets.fireBullet(this.gameObject.x + 200, this.gameObject.y + 60, this.direction);
-            if (this.direction == 'LEFT')
-              this.bullets.fireBullet(this.gameObject.x + 30, this.gameObject.y + 60, this.direction);
-          }, 100);
+          //   if (this.gameObject.anims.getName() != 'SHOOT') this.gameObject.play('SHOOT');
+          //   setTimeout(() => {
+          //     if (this.direction == 'RIGHT')
+          //       this.bullets.fireBullet(this.gameObject.x + 200, this.gameObject.y + 60, this.direction);
+          //     if (this.direction == 'LEFT')
+          //       this.bullets.fireBullet(this.gameObject.x + 30, this.gameObject.y + 60, this.direction);
+          //   }, 100);
         } else {
           if (right || up || down || left) {
             if (this.gameObject.anims.getName() != 'MOVE_RIGHT') this.gameObject.play('MOVE_RIGHT');
@@ -241,23 +206,12 @@ export class Character {
       }
     }
   }
-  move(movement: keys) {
+  update(movement: keys, pos: { x: number; y: number }) {
     if (this.state !== 'DEAD') {
-      if (!movement.space && !this.isWakingUp) {
-        if (this.gameObject.x + this.dimension.width < this.boundries.maxX && this.gameObject.x > this.boundries.minX)
-          this.gameObject.setVelocityX(movement.left ? -this.speed : movement.right ? this.speed : 0);
-        if (
-          this.gameObject.y + this.gameObject.displayHeight < this.boundries.maxY &&
-          this.gameObject.y > this.boundries.minY
-        )
-          this.gameObject.setVelocityY(movement.up ? -this.speed : movement.down ? this.speed : 0);
-      } else {
-        this.gameObject.setVelocity(0, 0);
-      }
-      this.setAnimation(movement);
-      this.boundriesValidator();
-      this.health.draw(true);
+      this.gameObject.setPosition(pos.x, pos.y);
     }
+    this.setAnimation(movement);
+    this.health.draw(true);
   }
 }
 
@@ -269,7 +223,7 @@ class HealthBar {
   length;
   total;
   isVisible = true;
-  constructor(scene, x, y, public character: Character) {
+  constructor(scene, x, y, public character: DisplayCharacter) {
     let self = this;
     this.bar = new Phaser.GameObjects.Graphics(scene);
     this.x = character.gameObject.x + 100;
